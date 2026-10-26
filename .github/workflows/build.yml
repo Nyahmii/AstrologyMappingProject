@@ -3,21 +3,22 @@ name: Build Cross-Platform Executables
 on:
   push:
     branches: [ main, master ]
-  workflow_dispatch: # Allows you to trigger it manually from the GitHub website
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false   # <-- one OS failing no longer cancels the others
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Python 3.10
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
@@ -26,28 +27,33 @@ jobs:
         python -m pip install --upgrade pip
         pip install PyQt5 PyQtWebEngine kerykeion geopy timezonefinder pyinstaller
 
+    - name: Ensure icon exists (placeholder if missing)
+      run: |
+        python -c "import pathlib,base64; p=pathlib.Path('astrology_icon.png'); p.exists() or p.write_bytes(base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='))"
+
     # Linux and Mac use a colon (:) for add-data
     - name: Build Executable (Linux/Mac)
       if: runner.os != 'Windows'
       run: |
         pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" \
-        --add-data "astrology_icon.png:." \
-        --hidden-import PyQt5.QtWebEngineWidgets \
-        --collect-data kerykeion \
-        AstroCharter.py
+          --add-data "astrology_icon.png:." \
+          --hidden-import PyQt5.QtWebEngineWidgets \
+          --collect-data kerykeion \
+          AstroCharter.py
 
     # Windows uses a semicolon (;) for add-data
     - name: Build Executable (Windows)
       if: runner.os == 'Windows'
+      shell: pwsh
       run: |
         pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" `
-        --add-data "astrology_icon.png;." `
-        --hidden-import PyQt5.QtWebEngineWidgets `
-        --collect-data kerykeion `
-        AstroCharter.py
+          --add-data "astrology_icon.png;." `
+          --hidden-import PyQt5.QtWebEngineWidgets `
+          --collect-data kerykeion `
+          AstroCharter.py
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: AstrologyChartGenerator-${{ matrix.os }}
         path: dist/

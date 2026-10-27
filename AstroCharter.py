@@ -832,10 +832,21 @@ class AstrologyChartGenerator(QMainWindow):
         self.tab_widget.removeTab(index)
 
     def get_stylesheet(self):
-        return "QWidget { background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 rgba(255, 182, 193, 255), stop:1 rgba(173, 216, 230, 255)); font-family: 'Arial'; } QPushButton { border: 2px solid #fff; color: #333; }"
-
+        return (
+            "QWidget { background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, "
+            "stop:0 rgba(255, 182, 193, 255), stop:1 rgba(173, 216, 230, 255)); "
+            "font-family: 'Arial'; color: #4A3B47; } "
+            "QLabel { color: #4A3B47; } "
+            "QLineEdit { color: #333333; } "
+            "QComboBox { color: #333333; } "
+            "QListWidget { color: #333333; } "
+            "QPushButton { border: 2px solid #fff; color: #333; }"
+        )
+    
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setStyle("Fusion")                         # consistent styling on Win/Mac/Linux
+    app.setPalette(app.style().standardPalette())  # fixed LIGHT palette -> no dark-mode leak
     window = AstrologyChartGenerator()
     window.show()
     sys.exit(app.exec_())

@@ -3,13 +3,14 @@ name: Build Cross-Platform Executables
 on:
   push:
     branches: [ main, master ]
+    tags: [ 'v*' ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false   # <-- one OS failing no longer cancels the others
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
 
@@ -17,43 +18,85 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Set up Python 3.10
+    - name: Set up Python 3.10 (macOS / Windows)
+      if: runner.os != 'Linux'
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
-    - name: Install Dependencies
+    - name: Install Dependencies (macOS / Windows)
+      if: runner.os != 'Linux'
       run: |
         python -m pip install --upgrade pip
-        pip install PyQt5 PyQtWebEngine kerykeion geopy timezonefinder pyinstaller
+        pip install "kerykeion>=4.18.5,<5.0.0" PyQt5 PyQtWebEngine geopy timezonefinder pyswisseph pyinstaller
 
-    - name: Ensure icon exists (placeholder if missing)
+    - name: Build Executable (Linux, pinned ubuntu:22.04 container)
+      if: runner.os == 'Linux'
       run: |
-        python -c "import pathlib,base64; p=pathlib.Path('astrology_icon.png'); p.exists() or p.write_bytes(base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='))"
+        cat > build_in_container.sh << 'SCRIPT'
+        set -e
+        apt-get update
+        apt-get install -y --no-install-recommends \
+          python3.10 python3-pip python3-venv \
+          libgl1 libegl1 libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 \
+          libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 \
+          libxcb-xfixes0 x11-utils
+        python3.10 -m venv /opt/venv
+        . /opt/venv/bin/activate
+        pip install --upgrade pip
+        pip install "kerykeion>=4.18.5,<5.0.0" PyQt5 PyQtWebEngine geopy timezonefinder pyswisseph pyinstaller
+        if [ -f astrology_icon.png ]; then
+          pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" \
+            --add-data "astrology_icon.png:." \
+            --hidden-import PyQt5.QtWebEngineWidgets \
+            --collect-data kerykeion AstroCharter.py
+        else
+          pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" \
+            --hidden-import PyQt5.QtWebEngineWidgets \
+            --collect-data kerykeion AstroCharter.py
+        fi
+        SCRIPT
+        docker run --rm -v "$PWD":/work -w /work ubuntu:22.04 bash /work/build_in_container.sh
 
-    # Linux and Mac use a colon (:) for add-data
-    - name: Build Executable (Linux/Mac)
-      if: runner.os != 'Windows'
+    - name: Build Executable (macOS)
+      if: runner.os == 'macOS'
       run: |
-        pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" \
-          --add-data "astrology_icon.png:." \
-          --hidden-import PyQt5.QtWebEngineWidgets \
-          --collect-data kerykeion \
-          AstroCharter.py
+        if [ -f astrology_icon.png ]; then
+          pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" --add-data "astrology_icon.png:." --hidden-import PyQt5.QtWebEngineWidgets --collect-data kerykeion AstroCharter.py
+        else
+          pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" --hidden-import PyQt5.QtWebEngineWidgets --collect-data kerykeion AstroCharter.py
+        fi
 
-    # Windows uses a semicolon (;) for add-data
     - name: Build Executable (Windows)
       if: runner.os == 'Windows'
-      shell: pwsh
       run: |
-        pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" `
-          --add-data "astrology_icon.png;." `
-          --hidden-import PyQt5.QtWebEngineWidgets `
-          --collect-data kerykeion `
-          AstroCharter.py
+        if (Test-Path astrology_icon.png) {
+          pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" --add-data "astrology_icon.png;." --hidden-import PyQt5.QtWebEngineWidgets --collect-data kerykeion AstroCharter.py
+        } else {
+          pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" --hidden-import PyQt5.QtWebEngineWidgets --collect-data kerykeion AstroCharter.py
+        }
 
-    - name: Upload Artifacts
+    - name: Rename per OS
+      shell: bash
+      run: |
+        cd dist
+        if [ "${{ runner.os }}" = "Windows" ]; then
+          mv AstrologyChartGenerator.exe AstrologyChartGenerator-Windows.exe
+        elif [ "${{ runner.os }}" = "macOS" ]; then
+          mv AstrologyChartGenerator AstrologyChartGenerator-macOS
+        else
+          mv AstrologyChartGenerator AstrologyChartGenerator-Linux
+        fi
+
+    - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: AstrologyChartGenerator-${{ matrix.os }}
         path: dist/
+
+    - name: Publish to GitHub Release (tags only)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v2
+      with:
+        files: dist/*
+        generate_release_notes: true

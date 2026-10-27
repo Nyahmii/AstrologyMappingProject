@@ -20,6 +20,14 @@ A magical desktop application for generating beautiful, customizable astrology c
 - 💾 **Custom Save Folders** — charts + English notes archive wherever you choose
 - 🌐 **Swiss Ephemeris Precision** — astronomical accuracy via Kerykeion (internet needed only for geocoding)
 
+## 🚀 Reference Images
+
+<img width="1918" height="987" alt="image" src="https://github.com/user-attachments/assets/33f3e9e4-a0ca-4553-b88f-a94292e64132" />
+
+<img width="1916" height="979" alt="image" src="https://github.com/user-attachments/assets/ce127100-8d18-41fc-8db5-69844ccb3518" />
+
+
+
 ## 🚀 Quick Start (run from source)
 
 ### Requirements

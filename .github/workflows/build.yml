@@ -32,31 +32,7 @@ jobs:
 
     - name: Build Executable (Linux, pinned ubuntu:22.04 container)
       if: runner.os == 'Linux'
-      run: |
-        cat > build_in_container.sh << 'SCRIPT'
-        set -e
-        apt-get update
-        apt-get install -y --no-install-recommends \
-          python3.10 python3-pip python3-venv \
-          libgl1 libegl1 libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 \
-          libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 \
-          libxcb-xfixes0 x11-utils
-        python3.10 -m venv /opt/venv
-        . /opt/venv/bin/activate
-        pip install --upgrade pip
-        pip install "kerykeion>=4.18.5,<5.0.0" PyQt5 PyQtWebEngine geopy timezonefinder pyswisseph pyinstaller
-        if [ -f astrology_icon.png ]; then
-          pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" \
-            --add-data "astrology_icon.png:." \
-            --hidden-import PyQt5.QtWebEngineWidgets \
-            --collect-data kerykeion AstroCharter.py
-        else
-          pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" \
-            --hidden-import PyQt5.QtWebEngineWidgets \
-            --collect-data kerykeion AstroCharter.py
-        fi
-        SCRIPT
-        docker run --rm -v "$PWD":/work -w /work ubuntu:22.04 bash /work/build_in_container.sh
+      run: docker run --rm -v "$PWD":/work -w /work ubuntu:22.04 bash linux_build.sh
 
     - name: Build Executable (macOS)
       if: runner.os == 'macOS'
@@ -98,5 +74,6 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v2
       with:
+        token: ${{ secrets.RELEASE_TOKEN || github.token }}
         files: dist/*
         generate_release_notes: true

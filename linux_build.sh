@@ -4,7 +4,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y --no-install-recommends \
   binutils \
-  python3.10 python3-pip python3-venv \
+  python3.10 python3-pip python3-venv libpython3.10 \
   libegl1 libgl1 libgles2 \
   libnss3 libnspr4 \
   libatk1.0-0 libatk-bridge2.0-0 \
@@ -20,7 +20,7 @@ python3.10 -m venv /opt/venv
 . /opt/venv/bin/activate
 pip install --upgrade pip
 pip install "kerykeion>=4.18.5,<5.0.0" PyQt5 PyQtWebEngine geopy timezonefinder pyswisseph pyinstaller
-# Sanity check: proves QtWebEngine imports before PyInstaller packs it
+# Sanity check
 python -c "import PyQt5.QtWebEngineWidgets; print('OK: QtWebEngine imports cleanly')"
 if [ -f astrology_icon.png ]; then
   pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" \

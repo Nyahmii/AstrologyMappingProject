@@ -20,7 +20,6 @@ python3.10 -m venv /opt/venv
 . /opt/venv/bin/activate
 pip install --upgrade pip
 pip install "kerykeion>=4.18.5,<5.0.0" PyQt5 PyQtWebEngine geopy timezonefinder pyswisseph pyinstaller
-# Sanity check
 python -c "import PyQt5.QtWebEngineWidgets; print('OK: QtWebEngine imports cleanly')"
 if [ -f astrology_icon.png ]; then
   pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" \
@@ -32,3 +31,6 @@ else
     --hidden-import PyQt5.QtWebEngineWidgets \
     --collect-data kerykeion AstroCharter.py
 fi
+# Hand the build output back to the runner user so later steps can rename/upload it
+chmod -R a+rwX /work/dist /work/build 2>/dev/null || true
+[ -f /work/AstrologyChartGenerator.spec ] && chmod a+rw /work/AstrologyChartGenerator.spec || true

@@ -25,11 +25,11 @@ if [ -f astrology_icon.png ]; then
   pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" \
     --add-data "astrology_icon.png:." \
     --hidden-import PyQt5.QtWebEngineWidgets \
-    --collect-data kerykeion AstroCharter.py
+    --collect-data kerykeion --collect-data certifi AstroCharter.py
 else
   pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" \
     --hidden-import PyQt5.QtWebEngineWidgets \
-    --collect-data kerykeion AstroCharter.py
+    --collect-data kerykeion --collect-data certifi AstroCharter.py
 fi
 # Hand the build output back to the runner user so later steps can rename/upload it
 chmod -R a+rwX /work/dist /work/build 2>/dev/null || true

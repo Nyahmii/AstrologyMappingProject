@@ -38,18 +38,18 @@ jobs:
       if: runner.os == 'macOS'
       run: |
         if [ -f astrology_icon.png ]; then
-          pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" --add-data "astrology_icon.png:." --hidden-import PyQt5.QtWebEngineWidgets --collect-data kerykeion AstroCharter.py
+          pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" --add-data "astrology_icon.png:." --hidden-import PyQt5.QtWebEngineWidgets --collect-data kerykeion --collect-data certifi AstroCharter.py
         else
-          pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" --hidden-import PyQt5.QtWebEngineWidgets --collect-data kerykeion AstroCharter.py
+          pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" --hidden-import PyQt5.QtWebEngineWidgets --collect-data kerykeion --collect-data certifi AstroCharter.py
         fi
 
     - name: Build Executable (Windows)
       if: runner.os == 'Windows'
       run: |
         if (Test-Path astrology_icon.png) {
-          pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" --add-data "astrology_icon.png;." --hidden-import PyQt5.QtWebEngineWidgets --collect-data kerykeion AstroCharter.py
+          pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" --add-data "astrology_icon.png;." --hidden-import PyQt5.QtWebEngineWidgets --collect-data kerykeion --collect-data certifi AstroCharter.py
         } else {
-          pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" --hidden-import PyQt5.QtWebEngineWidgets --collect-data kerykeion AstroCharter.py
+          pyinstaller --noconfirm --onefile --windowed --name "AstrologyChartGenerator" --hidden-import PyQt5.QtWebEngineWidgets --collect-data kerykeion --collect-data certifi AstroCharter.py
         }
 
     - name: Rename per OS

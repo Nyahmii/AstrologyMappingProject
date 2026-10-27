@@ -6,6 +6,8 @@ from datetime import datetime
 import xml.etree.ElementTree as ET
 import re
 import html
+import ssl
+import certifi
 
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QLabel, QLineEdit, QPushButton, QVBoxLayout, 
@@ -28,6 +30,29 @@ def resource_path(relative_path):
     except Exception:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
+
+def _ca_bundle():
+    """Locate the bundled CA certificate file, if present."""
+    try:
+        pem = certifi.where()
+        return pem if os.path.exists(pem) else None
+    except Exception:
+        return None
+
+
+def _make_ssl_context():
+    """Build an SSL context that trusts the bundled certificates (fixes macOS)."""
+    pem = _ca_bundle()
+    if pem:
+        return ssl.create_default_context(cafile=pem)
+    return None
+
+
+_CA = _ca_bundle()
+if _CA:
+    # Make every HTTPS library in the app (requests, urllib3, OpenSSL) use it
+    os.environ.setdefault("SSL_CERT_FILE", _CA)
+    os.environ.setdefault("REQUESTS_CA_BUNDLE", _CA)
 
 PASTEL_MAGICAL_GIRL_COLORS = {
     "#000000": "#000000", "#ffffff": "#ffffff",
@@ -377,7 +402,7 @@ def change_svg_colors(svg_path, output_path, color_map):
         print(f"Error processing SVG file: {e}")
 
 def get_location_info(city, state, country):
-    geolocator = Nominatim(user_agent="astrology_app")
+    geolocator = Nominatim(user_agent="astrology_app", ssl_context=_make_ssl_context())
     location_query = f"{city}, {state}, {country}" if state else f"{city}, {country}"
     location = geolocator.geocode(location_query)
     if location:

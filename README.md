@@ -103,3 +103,7 @@ astrology_icon.png            # Optional window icon
 ---
 
 Made with 💕 and starlight by **Nyahmii**
+
+## 🌟 Special Thanks
+* **Qwen3.8-Max** 🤖✨ — For being the ultimate debugging companion, wrestling with Docker containers, solving glibc archaeology, and helping bring this pastel dream to life.
+
